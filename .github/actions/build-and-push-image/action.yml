@@ -1,0 +1,59 @@
+name: Build and Push Image
+description: Builds and pushes Docker images for different stages.
+inputs:
+  image_base:
+    description: 'Base image for the Docker build'
+    required: true
+  image_version:
+    description: 'Version of the base image'
+    required: true
+  builder_image:
+    description: 'Builder image'
+    required: true
+  builder_version:
+    description: 'Builder image version'
+    required: true
+  dockerfile_path:
+    description: 'Path to the Dockerfile'
+    required: true
+  dockerhub_username:
+    description: 'DockerHub username'
+    required: true
+  dockerhub_token:
+    description: 'DockerHub token'
+    required: true
+  platforms:
+    description: 'Platforms for Docker build'
+    required: true
+  image_tag:
+    description: 'Docker image tag'
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Create and boot a builder instance
+      run: docker buildx create --use
+
+    - name: Login to DockerHub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ inputs.dockerhub_username }}
+        password: ${{ inputs.dockerhub_token }}
+
+    - name: Build and push Docker image to DockerHub
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ${{ inputs.dockerfile_path }}
+        push: true
+        platforms: ${{ inputs.platforms }}
+        build-args: |
+          IMAGE_BASE=${{ inputs.image_base }}
+          IMAGE_VERSION=${{ inputs.image_version }}
+          BUILDER_IMAGE=${{ inputs.builder_image }}
+          BUILDER_VERSION=${{ inputs.builder_version }}
+        cache-from: type=gha
+        tags: ${{ inputs.dockerhub_username }}/${{ env.APP_NAME }}:${{ inputs.image_tag }}
