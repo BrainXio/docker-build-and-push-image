@@ -1,0 +1,45 @@
+name: 'Compare Versions'
+description: 'A GitHub Action to compare source and target versions.'
+inputs:
+  source-version:
+    description: 'Source version for comparison.'
+    required: true
+  target-version:
+    description: 'Target version for comparison.'
+    required: true
+outputs:
+  version-equality:
+    description: 'Type of version equality: "full", "partial", or "not".'
+  versions-are-equal:
+    description: 'Boolean indicating if the versions are equal.'
+  highest-version:
+    description: 'Highest version between source and target versions.'
+runs:
+  using: 'composite'
+  steps:
+
+    - name: Compare Versions
+      shell: bash
+      id: compare_versions
+      run: |
+        # Extract version numbers
+        source_version=$(echo "${{ inputs.source-version }}" | sed 's/^v//')
+        target_version=$(echo "${{ inputs.target-version }}" | sed 's/^v//')
+        # Compare versions
+        if [ "${source_version}" == "${target_version}" ]; then
+          echo "VERSION_EQUALITY=full" >> $GITHUB_ENV
+          echo "VERSIONS_ARE_EQUAL=true" >> $GITHUB_ENV
+        elif [[ "${target_version}" == "${source_version}-"* ]]; then
+          echo "VERSION_EQUALITY=partial" >> $GITHUB_ENV
+          echo "VERSIONS_ARE_EQUAL=false" >> $GITHUB_ENV
+        else
+          echo "VERSION_EQUALITY=not" >> $GITHUB_ENV
+          echo "VERSIONS_ARE_EQUAL=false" >> $GITHUB_ENV
+        fi
+        # Find the highest version
+        if [[ "$(printf '%s\n' "${source_version}" "${target_version}" | sort -V | tail -n 1)" == "${source_version}" ]]; then
+          highest_version="${source_version}"
+        else
+          highest_version="${target_version}"
+        fi
+        echo "HIGHEST_VERSION=${highest_version}" >> $GITHUB_ENV

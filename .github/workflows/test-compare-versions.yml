@@ -1,0 +1,50 @@
+name: 'Test Compare Versions'
+
+on:
+  push:
+    paths:
+      - '.github/actions/compare-versions/**'
+  pull_request:
+    branches: ['main']
+  workflow_dispatch:
+
+jobs:
+  test-compare-versions:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Test Full Equality
+      id: full_equality
+      uses: ./.github/actions/compare-versions
+      with:
+        source-version: 'v1.0.0'
+        target-version: 'v1.0.0'
+
+    - name: Print Full Equality Results
+      run: |
+        echo "Equality: ${{ env.VERSION_EQUALITY }} | Versions Are Equal: ${{ env.VERSIONS_ARE_EQUAL }}"
+
+    - name: Test Partial Equality
+      id: partial_equality
+      uses: ./.github/actions/compare-versions
+      with:
+        source-version: 'v1.0.0'
+        target-version: 'v1.0.0-alpha'
+
+    - name: Print Partial Equality Results
+      run: |
+        echo "Equality: ${{ env.VERSION_EQUALITY }} | Versions Are Equal: ${{ env.VERSIONS_ARE_EQUAL }}"
+
+    - name: Test No Equality
+      id: no_equality
+      uses: ./.github/actions/compare-versions
+      with:
+        source-version: 'v1.0.0'
+        target-version: 'v2.0.0'
+
+    - name: Print No Equality Results
+      run: |
+        echo "Equality: ${{ env.VERSION_EQUALITY }} | Versions Are Equal: ${{ env.VERSIONS_ARE_EQUAL }}"

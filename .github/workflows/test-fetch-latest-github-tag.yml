@@ -1,0 +1,27 @@
+name: 'Test Fetch Latest Github Tag'
+
+on:
+  push:
+    paths:
+      - '.github/actions/fetch-latest-github-tag/**'
+  pull_request:
+    branches: ['main']
+  workflow_dispatch:
+
+jobs:
+  test-fetch-latest-github-tag:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Fetch Latest GitHub Tag
+      id: fetch-latest-tag
+      uses: ./.github/actions/fetch-latest-github-tag
+      with:
+        owner: 'brainxio'
+        repo: 'actions'
+
+    - name: Print Latest Tag
+      run: echo "Latest Tag ${{ env.GH_BRAINXIO_ACTIONS_LATEST_TAG }}"
